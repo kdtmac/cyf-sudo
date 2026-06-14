@@ -1208,7 +1208,7 @@ const Solver = {
       techniques: [...techniquesUsed],
       maxTechnique: [...techniquesUsed].pop() || 'N/A',
       difficulty: diff,
-      solved: this.findEmpty(working) === null,
+      solved: this._findEmpty(working) === null,
     };
   },
 

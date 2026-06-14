@@ -12,7 +12,7 @@ const Storage = {
   DEFAULT_STATS: {
     gamesPlayed: 0,
     gamesWon: 0,
-    bestTime: null,       // per difficulty: { easy: 120, medium: 300, ... }
+    bestTime: null,
     totalTime: 0,
     hintsUsed: 0,
     byDifficulty: {
@@ -21,6 +21,8 @@ const Storage = {
       hard:    { played: 0, won: 0, bestTime: null, totalTime: 0 },
       expert:  { played: 0, won: 0, bestTime: null, totalTime: 0 },
       master:  { played: 0, won: 0, bestTime: null, totalTime: 0 },
+      extreme: { played: 0, won: 0, bestTime: null, totalTime: 0 },
+      insane:  { played: 0, won: 0, bestTime: null, totalTime: 0 },
     }
   },
 

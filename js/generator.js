@@ -3,18 +3,17 @@
  */
 const Generator = {
 
-  // Difficulty presets: [cellsToRemove, techniquesRequired]
-  // Easy: naked/hidden singles only
-  // Medium: + naked pairs, pointing pairs
-  // Hard: + hidden pairs, box/line reduction
-  // Expert: + X-Wing, swordfish, XY-Wing
-  // Master: maximum difficulty, minimal clues
+  // Difficulty presets with dual rating systems
+  // 谢道台等级 (Xie Daotai): ★1-10+ stars
+  // SE分数 (Sukaku Explainer): 1.0-10.0+
   DIFFICULTY: {
-    easy:   { remove: 40, minClues: 36, label: '简单', emoji: '🌟' },
-    medium: { remove: 46, minClues: 30, label: '中等', emoji: '⭐' },
-    hard:   { remove: 51, minClues: 26, label: '困难', emoji: '🔥' },
-    expert: { remove: 55, minClues: 22, label: '专家', emoji: '💀' },
-    master: { remove: 58, minClues: 19, label: '大师', emoji: '👑' },
+    easy:   { remove: 40, minClues: 36, label: '简单', emoji: '🌟', xieRating: '★1-2', seScore: '1.0-2.6', desc: '唯余数、隐式唯一' },
+    medium: { remove: 46, minClues: 30, label: '中等', emoji: '⭐', xieRating: '★2-3', seScore: '2.0-3.4', desc: '数对、指向数对' },
+    hard:   { remove: 51, minClues: 26, label: '困难', emoji: '🔥', xieRating: '★3-5', seScore: '3.0-4.6', desc: '三数组、X-Wing' },
+    expert: { remove: 55, minClues: 22, label: '专家', emoji: '💀', xieRating: '★5-7', seScore: '4.0-6.0', desc: 'SWORDFISH、XY-Wing' },
+    master: { remove: 58, minClues: 19, label: '大师', emoji: '👑', xieRating: '★7-8', seScore: '5.5-7.5', desc: '空矩形、W-Wing、唯一矩形' },
+    extreme:{ remove: 61, minClues: 17, label: '极限', emoji: '💎', xieRating: '★8-9', seScore: '7.0-9.0', desc: '强制链、AIC、Sue De Coq' },
+    insane: { remove: 64, minClues: 15, label: '地狱', emoji: '☠️', xieRating: '★9-10+', seScore: '8.5-10.0+', desc: '动态强制链、复合技巧' },
   },
 
   /**
@@ -205,6 +204,8 @@ const Generator = {
     if (clues >= 30) return 'medium';
     if (clues >= 26) return 'hard';
     if (clues >= 22) return 'expert';
-    return 'master';
+    if (clues >= 19) return 'master';
+    if (clues >= 17) return 'extreme';
+    return 'insane';
   }
 };

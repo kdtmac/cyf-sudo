@@ -86,6 +86,15 @@ const Solver = {
     result = this.findXYZWing(grid, cands);
     if (result.found) return result;
 
+    result = this.findSimpleColoring(grid, cands);
+    if (result.found) return result;
+
+    result = this.findEmptyRectangle(grid, cands);
+    if (result.found) return result;
+
+    result = this.findWWing(grid, cands);
+    if (result.found) return result;
+
     // Fallback: brute force for remaining
     return this.bruteForceStep(grid);
   },
@@ -615,6 +624,259 @@ const Solver = {
               technique: 'XYZ翼 (XYZ-Wing)',
               explanation: `枢轴 R${pivot.row + 1}C${pivot.col + 1}(${x},${y},${z}) 连接两翼，形成 XYZ-Wing，可删除三格共同影响单元格中的候选数 ${z}。`,
             };
+          }
+        }
+      }
+    }
+    return { found: false };
+  },
+
+  // ============ TECHNIQUE 13: Simple Coloring ============
+  findSimpleColoring(grid, cands) {
+    for (let n = 1; n <= 9; n++) {
+      const links = this._buildStrongLinks(grid, cands, n);
+      if (links.length < 2) continue;
+
+      const colorMap = {};
+      const colors = ['A', 'B'];
+
+      const applyColor = (r, c, color) => {
+        const key = `${r},${c}`;
+        if (colorMap[key] && colorMap[key] !== color) {
+          return 'conflict';
+        }
+        if (colorMap[key]) return 'ok';
+        colorMap[key] = color;
+
+        const opposite = color === 'A' ? 'B' : 'A';
+        for (const [r1, c1, r2, c2] of links) {
+          if (r1 === r && c1 === c) {
+            const res = applyColor(r2, c2, opposite);
+            if (res === 'conflict') return 'conflict';
+          } else if (r2 === r && c2 === c) {
+            const res = applyColor(r1, c1, opposite);
+            if (res === 'conflict') return 'conflict';
+          }
+        }
+        return 'ok';
+      };
+
+      for (const [r1, c1, r2, c2] of links) {
+        if (!colorMap[`${r1},${c1}`]) {
+          if (applyColor(r1, c1, 'A') === 'conflict') {
+            const removed = [];
+            for (const key in colorMap) {
+              if (colorMap[key] === 'A') {
+                const [r, c] = key.split(',').map(Number);
+                removed.push({ row: r, col: c, value: n });
+              }
+            }
+            if (removed.length > 0) {
+              return {
+                found: true,
+                cells: removed,
+                technique: '简单着色法 (Simple Coloring)',
+                explanation: `数字 ${n} 着色出现冲突，颜色A代表的候选可删除。`,
+              };
+            }
+          }
+          break;
+        }
+      }
+
+      const seenBoth = new Set();
+      for (const key in colorMap) {
+        const [r, c] = key.split(',').map(Number);
+        for (let rr = 0; rr < 9; rr++) {
+          for (let cc = 0; cc < 9; cc++) {
+            if (r === rr && c === cc) continue;
+            if (colorMap[`${rr},${cc}`]) continue;
+            if (cands[rr][cc].includes(n) &&
+                (rr === r || cc === c || (Math.floor(rr / 3) === Math.floor(r / 3) && Math.floor(cc / 3) === Math.floor(c / 3)))) {
+              const otherKey = `${rr},${cc}`;
+              if (!seenBoth.has(otherKey)) {
+                const sees = [];
+                for (const k2 in colorMap) {
+                  if (colorMap[k2] !== colorMap[key]) {
+                    const [sr, sc] = k2.split(',').map(Number);
+                    if (rr === sr || cc === sc ||
+                        (Math.floor(rr / 3) === Math.floor(sr / 3) && Math.floor(cc / 3) === Math.floor(sc / 3))) {
+                      sees.push(k2);
+                    }
+                  }
+                }
+                if (sees.length > 0) {
+                  seenBoth.add(otherKey);
+                  const removed = [{ row: rr, col: cc, value: n }];
+                  return {
+                    found: true,
+                    cells: removed,
+                    technique: '简单着色法 (Simple Coloring)',
+                    explanation: `数字 ${n}: R${r + 1}C${c + 1}(${colorMap[key]}) 和另一颜色都能看到 R${rr + 1}C${cc + 1}，可删除 R${rr + 1}C${cc + 1} 中的 ${n}。`
+                  };
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return { found: false };
+  },
+
+  _buildStrongLinks(grid, cands, n) {
+    const links = [];
+    for (let r = 0; r < 9; r++) {
+      const positions = [];
+      for (let c = 0; c < 9; c++) {
+        if (cands[r][c].includes(n)) positions.push([r, c]);
+      }
+      if (positions.length === 2) {
+        links.push([...positions[0], ...positions[1]]);
+      }
+    }
+    for (let c = 0; c < 9; c++) {
+      const positions = [];
+      for (let r = 0; r < 9; r++) {
+        if (cands[r][c].includes(n)) positions.push([r, c]);
+      }
+      if (positions.length === 2) {
+        const exists = links.some(l =>
+          (l[0] === positions[0][0] && l[1] === positions[0][1] &&
+           l[2] === positions[1][0] && l[3] === positions[1][1])
+        );
+        if (!exists) links.push([...positions[0], ...positions[1]]);
+      }
+    }
+    for (let br = 0; br < 9; br += 3) {
+      for (let bc = 0; bc < 9; bc += 3) {
+        const positions = [];
+        for (let r = br; r < br + 3; r++) {
+          for (let c = bc; c < bc + 3; c++) {
+            if (cands[r][c].includes(n)) positions.push([r, c]);
+          }
+        }
+        if (positions.length === 2) {
+          const exists = links.some(l =>
+            (l[0] === positions[0][0] && l[1] === positions[0][1] &&
+             l[2] === positions[1][0] && l[3] === positions[1][1])
+          );
+          if (!exists) links.push([...positions[0], ...positions[1]]);
+        }
+      }
+    }
+    return links;
+  },
+
+  // ============ TECHNIQUE 14: Empty Rectangle ============
+  findEmptyRectangle(grid, cands) {
+    for (let n = 1; n <= 9; n++) {
+      for (let br = 0; br < 9; br += 3) {
+        for (let bc = 0; bc < 9; bc += 3) {
+          const positions = [];
+          for (let r = br; r < br + 3; r++) {
+            for (let c = bc; c < bc + 3; c++) {
+              if (cands[r][c].includes(n)) positions.push([r, c]);
+            }
+          }
+          if (positions.length < 2 || positions.length > 5) continue;
+
+          const rows = new Set(positions.map(p => p[0]));
+          const cols = new Set(positions.map(p => p[1]));
+
+          for (const emptyR of [br, br + 1, br + 2]) {
+            if (rows.has(emptyR)) continue;
+            for (const emptyC of [bc, bc + 1, bc + 2]) {
+              if (cols.has(emptyC)) continue;
+
+              for (let r = 0; r < 9; r++) {
+                if (r >= br && r < br + 3) continue;
+                if (!cands[r][emptyC].includes(n)) continue;
+
+                for (let c = 0; c < 9; c++) {
+                  if (c >= bc && c < bc + 3) continue;
+                  if (c === emptyC) continue;
+                  if (!cands[emptyR][c].includes(n)) continue;
+
+                  if (!cands[r][c].includes(n)) continue;
+
+                  return {
+                    found: true,
+                    cells: [{ row: r, col: c, value: n }],
+                    technique: '空矩形 (Empty Rectangle)',
+                    explanation: `在宫 ${Math.floor(br / 3) * 3 + Math.floor(bc / 3) + 1} 中，数字 ${n} 形成空矩形结构，可删除 R${r + 1}C${c + 1} 中的 ${n}。`
+                  };
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return { found: false };
+  },
+
+  // ============ TECHNIQUE 15: W-Wing ============
+  findWWing(grid, cands) {
+    const bivalues = [];
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (cands[r][c].length === 2) {
+          bivalues.push({ row: r, col: c, cands: cands[r][c] });
+        }
+      }
+    }
+
+    for (let i = 0; i < bivalues.length; i++) {
+      const a = bivalues[i];
+      for (let j = i + 1; j < bivalues.length; j++) {
+        const b = bivalues[j];
+        const common = a.cands.filter(x => b.cands.includes(x));
+        if (common.length !== 1) continue;
+        const z = common[0];
+        const x = a.cands.find(v => v !== z);
+        const y = b.cands.find(v => v !== z);
+        if (x === y) continue;
+
+        const linkCells = [];
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if ((r === a.row && c === a.col) || (r === b.row && c === b.col)) continue;
+            if (cands[r][c].includes(x) && cands[r][c].length === 2 && !cands[r][c].includes(z)) {
+              linkCells.push({ row: r, col: c, val: x });
+            }
+            if (cands[r][c].includes(y) && cands[r][c].length === 2 && !cands[r][c].includes(z)) {
+              linkCells.push({ row: r, col: c, val: y });
+            }
+          }
+        }
+
+        for (const lc of linkCells) {
+          const otherVal = lc.val === x ? y : x;
+          const otherLink = linkCells.find(l => l.val === otherVal &&
+            this._canSee(l.row, l.col, lc.row, lc.col));
+
+          if (otherLink) {
+            const removed = [];
+            for (let r = 0; r < 9; r++) {
+              for (let c = 0; c < 9; c++) {
+                if ((r === a.row && c === a.col) || (r === b.row && c === b.col)) continue;
+                if ((r === lc.row && c === lc.col) || (r === otherLink.row && c === otherLink.col)) continue;
+                if (this._canSee(a.row, a.col, r, c) && this._canSee(b.row, b.col, r, c)) {
+                  if (cands[r][c].includes(z)) {
+                    removed.push({ row: r, col: c, value: z });
+                  }
+                }
+              }
+            }
+            if (removed.length > 0) {
+              return {
+                found: true,
+                cells: removed,
+                technique: 'W翼 (W-Wing)',
+                explanation: `R${a.row + 1}C${a.col + 1}{${x},${z}} 与 R${b.row + 1}C${b.col + 1}{${y},${z}} 通过强链连接，可删除共同影响格中的 ${z}。`
+              };
+            }
           }
         }
       }

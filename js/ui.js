@@ -280,15 +280,17 @@ const UI = {
       ? Storage.formatTime(Math.round(stats.totalTime / stats.gamesPlayed)) : '--';
     document.getElementById('stat-hints-total').textContent = stats.hintsUsed;
 
-    const allDiffs = ['easy', 'medium', 'hard', 'expert', 'master'];
-    const labels = { easy: '简单', medium: '中等', hard: '困难', expert: '专家', master: '大师' };
+    const allDiffs = ['easy', 'medium', 'hard', 'expert', 'master', 'extreme', 'insane'];
+    const labels = { easy: '简单', medium: '中等', hard: '困难', expert: '专家', master: '大师', extreme: '极限', insane: '地狱' };
     const table = document.getElementById('diff-stats');
-    let html = '<div class="diff-row header"><span>难度</span><span>局数</span><span>完成</span><span>最佳</span><span>平均</span></div>';
+    let html = '<div class="diff-row header"><span>难度</span><span>谢道台</span><span>局数</span><span>完成</span><span>最佳</span><span>平均</span></div>';
     for (const d of allDiffs) {
       const ds = stats.byDifficulty[d] || { played: 0, won: 0, bestTime: null, totalTime: 0 };
       const avg = ds.played > 0 ? Storage.formatTime(Math.round(ds.totalTime / ds.played)) : '--';
+      const diffCfg = Generator.DIFFICULTY[d] || { xieRating: '-', label: labels[d] };
       html += `<div class="diff-row">
-        <span>${labels[d]}</span>
+        <span>${diffCfg.emoji || ''} ${labels[d]}</span>
+        <span>${diffCfg.xieRating || '-'}</span>
         <span>${ds.played}</span>
         <span>${ds.won}</span>
         <span>${Storage.formatTime(ds.bestTime)}</span>
@@ -411,29 +413,41 @@ const UI = {
   /* ========== Learn Panel ========== */
   _renderTechniqueList() {
     const container = document.getElementById('technique-list');
-    Techniques.list.forEach(tech => {
+    Techniques.list.forEach((tech, idx) => {
       const div = document.createElement('div');
       div.className = 'tech-item';
       div.innerHTML = `
         <span>${tech.icon}</span>
         <span>${tech.name}</span>
+        <span class="tech-xie">${tech.xieRating}</span>
         <span class="tech-diff ${tech.difficulty}">${Techniques.getDifficultyLabel(tech.difficulty)}</span>
       `;
       div.addEventListener('click', () => {
         container.querySelectorAll('.tech-item').forEach(t => t.classList.remove('active'));
         div.classList.add('active');
-        this._showTechniqueDetail(tech);
+        this._showTechniqueDetail(tech, idx + 1);
       });
       container.appendChild(div);
     });
   },
 
-  _showTechniqueDetail(tech) {
+  _showTechniqueDetail(tech, num) {
     const content = document.getElementById('learn-content');
     const diffLabel = Techniques.getDifficultyLabel(tech.difficulty);
+
+    let exampleHTML = '';
+    if (tech.exampleBoard) {
+      exampleHTML = this._renderExampleBoard(tech.exampleBoard);
+    }
+
+    const numStr = num ? `#${num}` : '';
     content.innerHTML = `
       <div class="tech-detail">
-        <h2>${tech.icon} ${tech.name}</h2>
+        <h2>${tech.icon} ${tech.name} <small>${tech.en}</small> ${numStr}</h2>
+        <div class="tech-ratings">
+          <span class="tech-rating-badge xie">🧩 谢道台: ${tech.xieRating}</span>
+          <span class="tech-rating-badge se">📊 SE: ${tech.seScore}</span>
+        </div>
         <span class="tech-diff-badge ${tech.difficulty}">${diffLabel}</span>
         <p class="tech-description">${tech.description}</p>
         <div class="tech-example">
@@ -441,8 +455,9 @@ const UI = {
           <p>${tech.howTo}</p>
         </div>
         <div class="tech-example">
-          <strong>📋 示例：</strong>
-          <p>${tech.example.description}</p>
+          <strong>📋 示例演示：</strong>
+          ${exampleHTML}
+          <p class="example-caption">${tech.exampleBoard ? tech.exampleBoard.explanation : tech.example.description}</p>
         </div>
         <div class="tech-example">
           <strong>📖 详细说明：</strong>
@@ -450,6 +465,45 @@ const UI = {
         </div>
       </div>
     `;
+  },
+
+  _renderExampleBoard(eb) {
+    let html = '<div class="example-board">';
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const val = eb.grid[r][c] || 0;
+        const hl = (eb.highlights || []).find(h => h.row === r && h.col === c);
+        let cellClass = 'eb-cell';
+        let cellContent = val !== 0 ? val : '';
+        let cellStyle = '';
+
+        if (hl) {
+          switch (hl.type) {
+            case 'target': cellClass += ' eb-target'; break;
+            case 'pair': cellClass += ' eb-pair'; break;
+            case 'elim': cellClass += ' eb-elim'; break;
+            default: cellClass += ' eb-target'; break;
+          }
+        }
+
+        if (val === 0 && hl && hl.note) {
+          cellContent = hl.note;
+          cellClass += ' eb-note';
+        } else if (val === 0 && hl && hl.value) {
+          cellContent = hl.value;
+          cellClass += ' eb-given';
+        } else if (val !== 0) {
+          cellClass += hl ? ' eb-highlight' : ' eb-given';
+        }
+
+        if (c === 2 || c === 5) cellClass += ' eb-box-right';
+        if (r === 2 || r === 5) cellClass += ' eb-box-bottom';
+
+        html += `<div class="${cellClass}">${cellContent}</div>`;
+      }
+    }
+    html += '</div>';
+    return html;
   },
 
   _showLearnPanel() {

@@ -362,11 +362,11 @@ button:active { transform: scale(0.96); }
   border-radius: 10px;
   background: var(--bg-tertiary);
   color: var(--text-muted);
-  margin-left: auto;
 }
 .tech-item .tech-diff.easy { background: #d1fae5; color: #065f46; }
 .tech-item .tech-diff.medium { background: #fef3c7; color: #92400e; }
 .tech-item .tech-diff.hard { background: #fecaca; color: #991b1b; }
+.tech-item .tech-diff.expert { background: #e9d5ff; color: #6b21a8; }
 
 .learn-content {
   flex: 1;
@@ -397,6 +397,101 @@ button:active { transform: scale(0.96); }
 }
 .tech-detail .tech-description { line-height: 1.7; color: var(--text-secondary); margin-bottom: 16px; }
 .tech-detail .tech-example { background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius); margin-bottom: 16px; }
+.tech-detail .tech-ratings {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tech-rating-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.tech-rating-badge.xie { background: #eef2ff; color: #4f46e5; }
+.tech-rating-badge.se { background: #fef3c7; color: #92400e; }
+.tech-xie {
+  font-size: 0.7rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: auto;
+  margin-right: 6px;
+}
+
+/* Example Board in Learn Panel */
+.example-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: 270px;
+  height: 270px;
+  border: 2px solid var(--box-border);
+  background: var(--box-border);
+  gap: 1px;
+  border-radius: 3px;
+  margin: 10px auto;
+}
+.eb-cell {
+  background: var(--cell-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.eb-cell.eb-box-right { border-right: 2px solid var(--box-border); }
+.eb-cell.eb-box-bottom { border-bottom: 2px solid var(--box-border); }
+.eb-cell.eb-given { color: var(--cell-given); }
+.eb-cell.eb-target { background: #c7d2fe; color: var(--accent); font-weight: 700; }
+.eb-cell.eb-pair { background: #eef2ff; color: var(--accent); }
+.eb-cell.eb-elim { background: #fecaca; color: var(--danger); text-decoration: line-through; }
+.eb-cell.eb-note { font-size: 0.55rem; color: var(--note-color); font-weight: 500; }
+.eb-cell.eb-highlight { color: var(--accent); font-weight: 700; }
+.example-caption {
+  text-align: center;
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* ===== Difficulty chart in stats ===== */
+.difficulty-chart {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.diff-chart-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+.diff-chart-row .diff-label {
+  width: 80px;
+  text-align: right;
+  color: var(--text-secondary);
+}
+.diff-chart-row .diff-bar-bg {
+  flex: 1;
+  height: 20px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.diff-chart-row .diff-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+.diff-chart-row .diff-bar-val {
+  width: 40px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 
 /* ===== Solver Panel ===== */
 #panel-solver.active { display: flex; }
@@ -477,7 +572,7 @@ button:active { transform: scale(0.96); }
 }
 .diff-stats-table .diff-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1fr;
   padding: 12px 16px;
   font-size: 0.85rem;
   border-bottom: 1px solid var(--border);

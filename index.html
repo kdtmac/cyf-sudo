@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数独大师 Sudoku Master</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 顶部导航栏 -->
+<nav id="navbar">
+  <div class="nav-left">
+    <span class="logo">🧩 数独大师</span>
+    <span class="logo-sub">Sudoku Master</span>
+  </div>
+  <div class="nav-center">
+    <button class="nav-btn" data-panel="play" title="游戏"><span class="icon">🎮</span> 游戏</button>
+    <button class="nav-btn" data-panel="learn" title="学习技巧"><span class="icon">📚</span> 学习</button>
+    <button class="nav-btn" data-panel="solver" title="解题器"><span class="icon">🤖</span> 解题器</button>
+    <button class="nav-btn" data-panel="stats" title="统计"><span class="icon">📊</span> 统计</button>
+  </div>
+  <div class="nav-right">
+    <button id="btn-theme" class="icon-btn" title="切换主题">🌓</button>
+    <button id="btn-settings" class="icon-btn" title="设置">⚙️</button>
+  </div>
+</nav>
+
+<!-- 主内容区 -->
+<main id="main-content">
+
+  <!-- ===== 游戏面板 ===== -->
+  <section id="panel-play" class="panel active">
+
+    <!-- 左侧：棋盘 -->
+    <div class="play-board-area">
+      <!-- 游戏信息栏 -->
+      <div class="game-info-bar">
+        <div class="difficulty-selector">
+          <button class="diff-btn" data-diff="easy">🌟 简单</button>
+          <button class="diff-btn active" data-diff="medium">⭐ 中等</button>
+          <button class="diff-btn" data-diff="hard">🔥 困难</button>
+          <button class="diff-btn" data-diff="expert">💀 专家</button>
+          <button class="diff-btn" data-diff="master">👑 大师</button>
+        </div>
+        <div class="game-stats">
+          <div class="stat-item"><span class="stat-label">⏱</span><span id="timer">00:00</span></div>
+          <div class="stat-item"><span class="stat-label">❌</span><span id="mistakes">0</span>/3</div>
+          <div class="stat-item"><span class="stat-label">💡</span><span id="hints-used">0</span></div>
+          <div class="stat-item"><span class="stat-label">📝</span><span id="cells-left">81</span></div>
+        </div>
+      </div>
+
+      <!-- 数独棋盘 -->
+      <div id="sudoku-board" class="sudoku-board">
+        <!-- JS动态生成 -->
+      </div>
+
+      <!-- 数字面板 -->
+      <div id="number-pad" class="number-pad">
+        <button class="num-btn" data-num="1">1</button>
+        <button class="num-btn" data-num="2">2</button>
+        <button class="num-btn" data-num="3">3</button>
+        <button class="num-btn" data-num="4">4</button>
+        <button class="num-btn" data-num="5">5</button>
+        <button class="num-btn" data-num="6">6</button>
+        <button class="num-btn" data-num="7">7</button>
+        <button class="num-btn" data-num="8">8</button>
+        <button class="num-btn" data-num="9">9</button>
+        <button class="num-btn erase-btn" data-num="0">⌫</button>
+      </div>
+    </div>
+
+    <!-- 右侧：工具面板 -->
+    <div class="play-tools-area">
+      <div class="tool-card">
+        <h3>🎯 游戏控制</h3>
+        <div class="tool-buttons">
+          <button id="btn-new-game" class="tool-btn primary">🆕 新游戏</button>
+          <button id="btn-restart" class="tool-btn">🔄 重新开始</button>
+          <button id="btn-undo" class="tool-btn">↩ 撤销</button>
+          <button id="btn-redo" class="tool-btn">↪ 重做</button>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>🛠 辅助工具</h3>
+        <div class="tool-buttons">
+          <button id="btn-pencil" class="tool-btn toggle-btn" data-tool="pencil">✏️ 笔记模式</button>
+          <button id="btn-autocand" class="tool-btn toggle-btn" data-tool="autocand">🔢 自动候选数</button>
+          <button id="btn-highlight" class="tool-btn toggle-btn" data-tool="highlight" data-active="true">🔍 高亮相同数字</button>
+          <button id="btn-check" class="tool-btn">✅ 检查错误</button>
+          <button id="btn-hint" class="tool-btn hint-btn">💡 提示</button>
+        </div>
+      </div>
+
+      <div class="tool-card" id="hint-card" style="display:none;">
+        <h3>💡 提示详情</h3>
+        <div id="hint-content">
+          <p class="hint-technique"></p>
+          <p class="hint-explanation"></p>
+        </div>
+        <button id="btn-apply-hint" class="tool-btn primary">应用提示</button>
+      </div>
+
+      <div class="tool-card">
+        <h3>⌨ 快捷键</h3>
+        <div class="shortcuts-info">
+          <div>1-9 <span>填入数字</span></div>
+          <div>0 / Del <span>擦除</span></div>
+          <div>方向键 <span>移动光标</span></div>
+          <div>Shift+数字 <span>笔记标记</span></div>
+          <div>Ctrl+Z <span>撤销</span></div>
+          <div>Space <span>切换笔记模式</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 学习面板 ===== -->
+  <section id="panel-learn" class="panel">
+    <div class="learn-container">
+      <aside class="learn-sidebar">
+        <h2>📚 数独技巧</h2>
+        <div class="technique-list" id="technique-list">
+          <!-- JS动态生成 -->
+        </div>
+      </aside>
+      <div class="learn-content" id="learn-content">
+        <div class="learn-placeholder">
+          <h3>👈 选择一个技巧开始学习</h3>
+          <p>从易到难，循序渐进掌握所有数独技巧</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 解题器面板 ===== -->
+  <section id="panel-solver" class="panel">
+    <div class="solver-container">
+      <div class="solver-left">
+        <h2>🤖 逐步解题器</h2>
+        <p class="solver-desc">输入一个数独题目，观察AI如何一步步用逻辑技巧解开它</p>
+        <div class="solver-board-wrapper">
+          <div id="solver-board" class="sudoku-board solver-board">
+            <!-- JS动态生成 -->
+          </div>
+        </div>
+        <div class="solver-numpad">
+          <button class="num-btn small" data-num="1">1</button>
+          <button class="num-btn small" data-num="2">2</button>
+          <button class="num-btn small" data-num="3">3</button>
+          <button class="num-btn small" data-num="4">4</button>
+          <button class="num-btn small" data-num="5">5</button>
+          <button class="num-btn small" data-num="6">6</button>
+          <button class="num-btn small" data-num="7">7</button>
+          <button class="num-btn small" data-num="8">8</button>
+          <button class="num-btn small" data-num="9">9</button>
+          <button class="num-btn small erase-btn" data-num="0">⌫</button>
+        </div>
+        <div class="solver-controls">
+          <button id="btn-solver-step" class="tool-btn primary">⏭ 下一步</button>
+          <button id="btn-solver-auto" class="tool-btn">▶ 自动求解</button>
+          <button id="btn-solver-reset" class="tool-btn">🔄 重置</button>
+          <button id="btn-solver-clear" class="tool-btn">🗑 清空</button>
+          <button id="btn-solver-load" class="tool-btn">📋 加载当前游戏</button>
+        </div>
+      </div>
+      <div class="solver-right">
+        <h3>📋 求解步骤</h3>
+        <div id="solver-steps" class="solver-steps">
+          <p class="placeholder">输入题目后点击"下一步"开始求解</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 统计面板 ===== -->
+  <section id="panel-stats" class="panel">
+    <div class="stats-container">
+      <h2>📊 游戏统计</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-games-played">0</div>
+          <div class="stat-label-text">总游戏数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-games-won">0</div>
+          <div class="stat-label-text">已完成</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-win-rate">0%</div>
+          <div class="stat-label-text">完成率</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-best-time">--</div>
+          <div class="stat-label-text">最佳时间</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-avg-time">--</div>
+          <div class="stat-label-text">平均时间</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-hints-total">0</div>
+          <div class="stat-label-text">使用提示</div>
+        </div>
+      </div>
+      <h3>各难度统计</h3>
+      <div class="diff-stats-table" id="diff-stats">
+        <!-- JS动态生成 -->
+      </div>
+      <button id="btn-reset-stats" class="tool-btn">🗑 重置统计</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- 模态框 -->
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+  <div id="modal-content" class="modal-content">
+    <!-- JS动态填充 -->
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/solver.js"></script>
+<script src="js/techniques.js"></script>
+<script src="js/board.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

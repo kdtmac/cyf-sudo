@@ -13,6 +13,7 @@ const App = {
   redoStack: [],
   gameStarted: false,
   gameCompleted: false,
+  _saveTimeout: null,
 
   init() {
     this.board = new Board('sudoku-board', {
@@ -312,7 +313,17 @@ const App = {
   },
 
   /* ========== State Persistence ========== */
-  _saveGame() {
+  _saveGame(immediate) {
+    if (this.gameCompleted) return;
+    if (immediate) {
+      this._doSave();
+      return;
+    }
+    if (this._saveTimeout) clearTimeout(this._saveTimeout);
+    this._saveTimeout = setTimeout(() => this._doSave(), 500);
+  },
+
+  _doSave() {
     if (this.gameCompleted) return;
     const state = {
       puzzle: this.puzzle,

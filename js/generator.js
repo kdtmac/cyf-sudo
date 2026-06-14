@@ -23,14 +23,15 @@ const Generator = {
    */
   generate(difficulty = 'medium') {
     const cfg = this.DIFFICULTY[difficulty];
-    const maxAttempts = cfg.minLevel >= 5 ? 40 : (cfg.minLevel >= 3 ? 20 : 1);
+    const needCheck = cfg.minLevel >= 3;
+    const maxAttempts = cfg.minLevel >= 5 ? 15 : (cfg.minLevel >= 3 ? 8 : 1);
     let bestPuzzle = null, bestSolution = null, bestLevel = -1;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const solution = this._generateSolution();
       const puzzle = this._createPuzzle(solution, difficulty);
 
-      if (cfg.minLevel > 0) {
+      if (needCheck) {
         const analysis = Solver.analyzeDifficulty(puzzle);
         if (analysis.level >= cfg.minLevel) {
           return { puzzle, solution, difficulty, analysis };
@@ -41,16 +42,16 @@ const Generator = {
           bestSolution = solution;
         }
       } else {
-        return { puzzle, solution, difficulty, analysis: Solver.analyzeDifficulty(puzzle) };
+        return { puzzle, solution, difficulty };
       }
     }
 
     if (bestPuzzle) {
-      return { puzzle: bestPuzzle, solution: bestSolution, difficulty, analysis: Solver.analyzeDifficulty(bestPuzzle) };
+      return { puzzle: bestPuzzle, solution: bestSolution, difficulty };
     }
     const solution = this._generateSolution();
     const puzzle = this._createPuzzle(solution, difficulty);
-    return { puzzle, solution, difficulty, analysis: Solver.analyzeDifficulty(puzzle) };
+    return { puzzle, solution, difficulty };
   },
 
   /**

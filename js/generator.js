@@ -52,7 +52,6 @@ const Generator = {
     const puzzle = this._createPuzzle(solution, difficulty);
     return { puzzle, solution, difficulty, analysis: Solver.analyzeDifficulty(puzzle) };
   },
-  },
 
   /**
    * Generate a fully solved 9x9 Sudoku grid

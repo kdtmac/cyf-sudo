@@ -1178,20 +1178,28 @@ const Solver = {
     const working = grid.map(row => [...row]);
     const techniquesUsed = new Set();
     let maxLevel = 0;
+    const PLACEMENT_TECHNIQUES = ['唯余数', 'Naked Single', '隐式唯一', 'Hidden Single', '试错法', 'Brute Force'];
 
     for (let iter = 0; iter < 200; iter++) {
       const result = this.findNextStep(working);
       if (!result.found) break;
 
-      for (const cell of result.cells) {
-        working[cell.row][cell.col] = cell.value;
-      }
-
+      let techLevel = 0;
       for (const [key, level] of Object.entries(this.TECHNIQUE_LEVELS)) {
         if (result.technique.includes(key)) {
           techniquesUsed.add(result.technique);
-          maxLevel = Math.max(maxLevel, level);
+          techLevel = Math.max(techLevel, level);
         }
+      }
+      maxLevel = Math.max(maxLevel, techLevel);
+
+      const isPlacement = PLACEMENT_TECHNIQUES.some(t => result.technique.includes(t));
+      if (isPlacement) {
+        for (const cell of result.cells) {
+          working[cell.row][cell.col] = cell.value;
+        }
+      } else {
+        break;
       }
     }
 

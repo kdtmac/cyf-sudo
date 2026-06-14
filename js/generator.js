@@ -184,19 +184,6 @@ const Generator = {
     const copy = grid.map(row => [...row]);
     let count = 0;
 
-    // First, apply logical solver to reduce the search space
-    for (let i = 0; i < 200; i++) {
-      const step = Solver.findNextStep(copy);
-      if (!step.found) break;
-      for (const cell of step.cells) {
-        copy[cell.row][cell.col] = cell.value;
-      }
-    }
-
-    // Check if already solved
-    if (!this._findEmpty(copy)) return 1;
-
-    // Backtrack on remaining empty cells
     const solve = (g) => {
       if (count >= 2) return;
 

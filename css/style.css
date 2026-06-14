@@ -189,6 +189,22 @@ button:active { transform: scale(0.96); }
 .stat-item { display: flex; align-items: center; gap: 4px; color: var(--text-secondary); }
 .stat-label { font-size: 1rem; }
 
+/* Difficulty Info Bar */
+.diff-info-bar {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.diff-info-xie { color: var(--accent); font-weight: 600; }
+.diff-info-se { color: #92400e; font-weight: 600; }
+.diff-info-desc { color: var(--text-secondary); }
+
 /* ===== Sudoku Board ===== */
 .sudoku-board {
   display: grid;

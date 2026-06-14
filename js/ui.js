@@ -126,9 +126,20 @@ const UI = {
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const diff = btn.dataset.diff;
+        this._updateDiffInfo(diff);
         this._app.startNewGame(diff);
       });
     });
+  },
+
+  _updateDiffInfo(diff) {
+    const cfg = Generator.DIFFICULTY[diff];
+    if (!cfg) return;
+    document.getElementById('diff-info').innerHTML = `
+      <span class="diff-info-xie">🧩 谢道台: ${cfg.xieRating}</span>
+      <span class="diff-info-se">📊 SE: ${cfg.seScore}</span>
+      <span class="diff-info-desc">${cfg.desc}</span>
+    `;
   },
 
   /* ========== Timer ========== */

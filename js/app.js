@@ -371,6 +371,8 @@ const App = {
       if (b.dataset.diff === this.difficulty) b.classList.add('active');
     });
 
+    UI._updateDiffInfo(this.difficulty);
+
     this._updateNumPad();
   },
 

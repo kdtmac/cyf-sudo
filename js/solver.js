@@ -1149,5 +1149,75 @@ const Solver = {
       }
     }
     return 9 - count;
-  }
+  },
+
+  /**
+   * Analyze difficulty by running logical solver and tracking max technique level
+   * Returns: { level: 1-7, techniques: [...], difficulty: 'easy'...'insane' }
+   */
+  TECHNIQUE_LEVELS: {
+    '唯余数': 1, 'Naked Single': 1,
+    '隐式唯一': 1, 'Hidden Single': 1,
+    '显式数对': 2, 'Naked Pair': 2,
+    '隐式数对': 2, 'Hidden Pair': 2,
+    '指向数对': 2, 'Pointing': 2,
+    '区块删减法': 2, 'Box/Line': 2,
+    '显式三数组': 3, 'Naked Triple': 3,
+    '隐式三数组': 3, 'Hidden Triple': 3,
+    'X翼': 4, 'X-Wing': 4,
+    '剑鱼': 4, 'Swordfish': 4,
+    'XY翼': 4, 'XY-Wing': 4,
+    'XYZ翼': 4, 'XYZ-Wing': 4,
+    '简单着色法': 5, 'Simple Coloring': 5,
+    '空矩形': 5, 'Empty Rectangle': 5,
+    'W翼': 5, 'W-Wing': 5,
+    '试错法': 6, 'Brute Force': 6,
+  },
+
+  analyzeDifficulty(grid) {
+    const working = grid.map(row => [...row]);
+    const techniquesUsed = new Set();
+    let maxLevel = 0;
+
+    for (let iter = 0; iter < 200; iter++) {
+      const result = this.findNextStep(working);
+      if (!result.found) break;
+
+      for (const cell of result.cells) {
+        working[cell.row][cell.col] = cell.value;
+      }
+
+      for (const [key, level] of Object.entries(this.TECHNIQUE_LEVELS)) {
+        if (result.technique.includes(key)) {
+          techniquesUsed.add(result.technique);
+          maxLevel = Math.max(maxLevel, level);
+        }
+      }
+    }
+
+    let diff = 'easy';
+    if (maxLevel >= 6) diff = 'insane';
+    else if (maxLevel >= 5) diff = 'extreme';
+    else if (maxLevel >= 4) diff = 'master';
+    else if (maxLevel >= 3) diff = 'expert';
+    else if (maxLevel >= 2) diff = 'hard';
+    else if (maxLevel >= 1) diff = 'medium';
+
+    return {
+      level: maxLevel,
+      techniques: [...techniquesUsed],
+      maxTechnique: [...techniquesUsed].pop() || 'N/A',
+      difficulty: diff,
+      solved: this.findEmpty(working) === null,
+    };
+  },
+
+  _findEmpty(grid) {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (grid[r][c] === 0) return [r, c];
+      }
+    }
+    return null;
+  },
 };

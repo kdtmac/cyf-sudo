@@ -18,6 +18,7 @@ const App = {
   init() {
     this.board = new Board('sudoku-board', {
       onCellClick: (r, c) => this._onCellSelect(r, c),
+      onNoteClick: (r, c, num) => this._onNoteClick(r, c, num),
     });
 
     UI.init(this);
@@ -175,6 +176,16 @@ const App = {
   _onCellSelect(r, c) {
     if (this.gameCompleted) return;
     this.board.selectCell(r, c);
+  },
+
+  _onNoteClick(r, c, num) {
+    if (this.gameCompleted) return;
+    if (this.board.given[r][c]) return;
+    if (this.board.getValue(r, c) !== 0) return;
+    // Clicking a note number removes that candidate
+    this.board.notes[r][c].delete(num);
+    this.board._paintCell(r, c);
+    this._saveGame();
   },
 
   /* ========== Tools ========== */

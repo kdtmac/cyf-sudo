@@ -20,6 +20,7 @@ class Board {
 
     this._onCellClick = options.onCellClick || null;
     this._onCellChange = options.onCellChange || null;
+    this._onNoteClick = options.onNoteClick || null;
 
     this._render();
     this._bindKeyboard();
@@ -267,7 +268,16 @@ class Board {
       notesGrid.className = 'notes';
       for (let n = 1; n <= 9; n++) {
         const span = document.createElement('span');
-        span.textContent = notes.has(n) ? n : '';
+        if (notes.has(n)) {
+          span.textContent = n;
+          span.style.cursor = 'pointer';
+          span.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止触发 cell 的 click
+            if (this._onNoteClick) this._onNoteClick(r, c, n);
+          });
+        } else {
+          span.textContent = '';
+        }
         notesGrid.appendChild(span);
       }
       cell.appendChild(notesGrid);

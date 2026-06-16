@@ -31,7 +31,7 @@ const App = {
   },
 
   /* ========== Game Lifecycle ========== */
-  startNewGame(difficulty) {
+  async startNewGame(difficulty) {
     this.difficulty = difficulty;
     this.mistakes = 0;
     this.hintsUsed = 0;
@@ -41,9 +41,16 @@ const App = {
     this.gameCompleted = false;
     this.gameStarted = false;
 
-    const result = Generator.generate(difficulty);
-    this.puzzle = result.puzzle.map(row => [...row]);
-    this.solution = result.solution;
+    UI.showLoading(difficulty);
+    try {
+      const result = await Generator.generate(difficulty, {
+        onProgress: (a, max) => UI.updateLoadingProgress(a, max),
+      });
+      this.puzzle = result.puzzle.map(row => [...row]);
+      this.solution = result.solution;
+    } finally {
+      UI.hideLoading();
+    }
 
     this.board.loadPuzzle(this.puzzle, this._getGivenMask());
 

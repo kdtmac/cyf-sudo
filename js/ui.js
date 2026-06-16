@@ -122,12 +122,13 @@ const UI = {
   _bindDifficulty() {
     const btns = document.querySelectorAll('.diff-btn');
     btns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
+        if (this._loading) return; // 防止连点
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const diff = btn.dataset.diff;
         this._updateDiffInfo(diff);
-        this._app.startNewGame(diff);
+        await this._app.startNewGame(diff);
       });
     });
   },
@@ -204,10 +205,11 @@ const UI = {
   _bindTools() {
     const app = this._app;
 
-    document.getElementById('btn-new-game').addEventListener('click', () => {
+    document.getElementById('btn-new-game').addEventListener('click', async () => {
+      if (this._loading) return;
       const activeDiff = document.querySelector('.diff-btn.active');
       const diff = activeDiff ? activeDiff.dataset.diff : 'medium';
-      app.startNewGame(diff);
+      await app.startNewGame(diff);
     });
 
     document.getElementById('btn-restart').addEventListener('click', () => app.restartGame());
@@ -346,6 +348,35 @@ const UI = {
 
   getPendingHint() {
     return this._pendingHint;
+  },
+
+  /* ========== Loading Overlay ========== */
+  _loading: false,
+
+  showLoading(difficulty) {
+    this._loading = true;
+    const label = Generator.DIFFICULTY[difficulty]?.label || difficulty;
+    const emoji = Generator.DIFFICULTY[difficulty]?.emoji || '🎲';
+    const el = document.getElementById('loading-overlay');
+    if (el) el.style.display = 'flex';
+    const msgEl = document.getElementById('loading-msg');
+    if (msgEl) msgEl.textContent = `${emoji} 正在生成「${label}」难题…`;
+    const barEl = document.getElementById('loading-bar');
+    if (barEl) barEl.style.width = '0%';
+  },
+
+  updateLoadingProgress(attempt, max) {
+    const pct = Math.round((attempt / max) * 100);
+    const barEl = document.getElementById('loading-bar');
+    if (barEl) barEl.style.width = pct + '%';
+    const msgEl = document.getElementById('loading-sub');
+    if (msgEl) msgEl.textContent = `尝试 ${attempt}/${max}`;
+  },
+
+  hideLoading() {
+    this._loading = false;
+    const el = document.getElementById('loading-overlay');
+    if (el) el.style.display = 'none';
   },
 
   /* ========== Modals ========== */

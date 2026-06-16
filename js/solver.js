@@ -52,6 +52,116 @@ const Solver = {
   },
 
   /**
+   * 人类常用技巧提示系统
+   * 只使用人类解题时真正会用的技巧，按自然发现顺序排列
+   */
+  HUMAN_HINT_ORDER: [
+    'NakedSingle',       // 1. 唯余数 — 这格只有一个可能
+    'HiddenSingle',      // 2. 隐式唯一 — 这数只能放这里
+    'NakedPair',         // 3. 显式数对 — 两格共享两个候选
+    'PointingPair',      // 4. 指向数对 — 宫内数字锁在一行/列
+    'BoxLineReduction',  // 5. 区块删减 — 行/列数字锁在一宫
+    'HiddenPair',        // 6. 隐式数对 — 两数只能出现于两格
+    'NakedTriple',       // 7. 显式三数组 — 三格共享三个候选
+    'XWing',             // 8. X翼 — 两行两列矩形锁定
+    'HiddenTriple',      // 9. 隐式三数组 — 三数仅在三格
+    'XYWing',            // 10. XY翼 — 三格逻辑链
+  ],
+
+  /**
+   * 人类友好的自然语言解释（覆盖机器风格的 technique/explanation）
+   */
+  _humanExplain(result) {
+    const h = result;
+    const r = h._rawResult; // 原始机器结果
+    if (!r || !r.cells || r.cells.length === 0) return;
+
+    const placement = this.PLACEMENT_TECHNIQUE_KEYS.some(t => r.technique.includes(t));
+    const c = r.cells[0];
+
+    if (placement) {
+      // 填值型：直接告诉用户填什么
+      if (r.technique.includes('唯余数') || r.technique.includes('Naked Single')) {
+        h.technique = '唯余数';
+        h.explanation = `R${c.row + 1}C${c.col + 1} 只有一个可能的数字 ${c.value}，直接填入即可。`;
+      } else if (r.technique.includes('隐式唯一') || r.technique.includes('Hidden Single')) {
+        h.technique = '隐式唯一';
+        h.explanation = `R${c.row + 1}C${c.col + 1} 所在的单元中，数字 ${c.value} 只有这一个位置可放。`;
+      } else if (r.technique.includes('XY翼') || r.technique.includes('XY-Wing')) {
+        h.technique = 'XY翼';
+        h.explanation = r.explanation; // XY-Wing 的机器解释已经足够清晰
+      } else {
+        h.technique = r.technique;
+        h.explanation = r.explanation;
+      }
+    } else {
+      // 消除型：用通俗语言解释「哪些格子的哪些候选可删」
+      const vals = [...new Set(r.cells.map(c => c.value))].join('、');
+      const cells = r.cells.slice(0, 4).map(c => `R${c.row + 1}C${c.col + 1}`).join('、');
+      const more = r.cells.length > 4 ? `等 ${r.cells.length} 格` : '';
+
+      if (r.technique.includes('数对') || r.technique.includes('Naked Pair')) {
+        h.technique = '显式数对';
+        h.explanation = `某单元中两格的候选完全相同，可删除该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('隐式数对') || r.technique.includes('Hidden Pair')) {
+        h.technique = '隐式数对';
+        h.explanation = `某单元中两个数字只能出现在相同两格，可删除这两格中的其他候选数（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('三数组') || r.technique.includes('Naked Triple')) {
+        h.technique = '显式三数组';
+        h.explanation = `某单元中三格的候选并集恰好为三个数字，可删该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('隐式三数组') || r.technique.includes('Hidden Triple')) {
+        h.technique = '隐式三数组';
+        h.explanation = `某单元中三个数字只能出现在相同三格，可删这些格子中其他候选（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('指向') || r.technique.includes('Pointing')) {
+        h.technique = '指向数对';
+        h.explanation = `某宫中数字 ${vals} 的候选都在同一行/列，可删该行/列外部的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('区块') || r.technique.includes('Box/Line')) {
+        h.technique = '区块删减';
+        h.explanation = `某行/列中数字 ${vals} 的候选都在同一宫，可删该宫内其他行/列的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('X翼') || r.technique.includes('X-Wing')) {
+        h.technique = 'X翼';
+        h.explanation = `数字 ${vals} 在两行（列）中形成矩形锁定，可删对应列（行）中其他格的 ${vals}（涉及 ${cells}${more}）。`;
+      } else {
+        h.technique = r.technique.split('(')[0].trim();
+        h.explanation = r.explanation;
+      }
+    }
+  },
+
+  /**
+   * 按人类解题顺序寻找提示。
+   * 只使用人类常用的 10 种技巧，跳过机器专属的高级技巧。
+   * @returns { found, cells, technique, explanation } 或 { found: false, message }
+   */
+  findHumanHint(grid) {
+    const cands = this.getCandidates(grid);
+
+    for (const fnName of this.HUMAN_HINT_ORDER) {
+      const fn = this._techniqueMap[fnName];
+      if (!fn) continue;
+      const result = fn.call(this, grid, cands);
+      if (result && result.found) {
+        // 包装人类化解释
+        const hint = {
+          found: true,
+          cells: result.cells,
+          technique: result.technique,
+          explanation: result.explanation,
+          _rawResult: result,
+        };
+        this._humanExplain(hint);
+        return hint;
+      }
+    }
+
+    // 人类技巧全部用尽还解不开 → 建议开启自动候选数辅助观察
+    return {
+      found: false,
+      message: '当前没有明显的人类可识别的线索。试试开启「自动候选数」辅助观察，或者用解题器分析。',
+    };
+  },
+
+  /**
    * 按难度顺序依次尝试所有逻辑技巧（不含 brute force）
    * 返回首个命中的结果；都未命中返回 null
    */

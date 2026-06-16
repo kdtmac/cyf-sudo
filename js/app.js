@@ -262,9 +262,9 @@ const App = {
   getHint() {
     if (this.gameCompleted) return;
     const grid = this.board.getCurrentGrid();
-    const result = Solver.findNextStep(grid);
+    const result = Solver.findHumanHint(grid);
     if (!result.found) {
-      alert('当前无法找到更多逻辑步骤。');
+      alert(result.message || '当前无法找到更多逻辑步骤。');
       return;
     }
     this.hintsUsed++;

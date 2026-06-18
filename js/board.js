@@ -73,12 +73,15 @@ class Board {
   }
 
   _handleClick(r, c) {
+    // 记住切换前的选中值，供双击使用
+    this._lastHighlightedVal = (this.selectedRow !== null && this.selectedCol !== null && this.values[this.selectedRow][this.selectedCol] !== 0)
+      ? this.values[this.selectedRow][this.selectedCol] : null;
     this.selectCell(r, c);
     if (this._onCellClick) this._onCellClick(r, c);
   }
 
   _handleDoubleClick(r, c) {
-    if (this._onCellDoubleClick) this._onCellDoubleClick(r, c);
+    if (this._onCellDoubleClick) this._onCellDoubleClick(r, c, this._lastHighlightedVal);
   }
 
   selectCell(r, c) {

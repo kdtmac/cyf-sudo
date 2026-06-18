@@ -197,38 +197,32 @@ const App = {
     if (this.gameCompleted) return;
     if (this.board.given[r][c]) return;
     if (this.board.getValue(r, c) !== 0) return;
-    if (hlVal === null || hlVal === 0) return; // 双击前没有高亮的数字
 
-    // 检查 hlVal 是否在 (r,c) 的候选里
-    const notes = this.board.notes[r][c];
-    if (!notes.has(hlVal)) return;
-
-    // 检查是否在某单元中是隐式唯一
     const grid = this.board.getCurrentGrid();
     const cands = Solver.getCandidates(grid);
 
-    // 同行
-    let rowPos = [];
-    for (let cc = 0; cc < 9; cc++) if (cands[r][cc].includes(hlVal)) rowPos.push(cc);
-    if (rowPos.length === 1 && rowPos[0] === c) {
-      this.onNumberInput(hlVal);
-      return;
+    // Case 1: 高亮数在该格是隐式唯一 → 直接填高亮数
+    if (hlVal !== null && hlVal !== 0 && this.board.notes[r][c].has(hlVal)) {
+      // 同行
+      let rowPos = [];
+      for (let cc = 0; cc < 9; cc++) if (cands[r][cc].includes(hlVal)) rowPos.push(cc);
+      if (rowPos.length === 1 && rowPos[0] === c) { this.onNumberInput(hlVal); return; }
+      // 同列
+      let colPos = [];
+      for (let rr = 0; rr < 9; rr++) if (cands[rr][c].includes(hlVal)) colPos.push(rr);
+      if (colPos.length === 1 && colPos[0] === r) { this.onNumberInput(hlVal); return; }
+      // 同宫
+      const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+      let boxPos = [];
+      for (let rr = br; rr < br + 3; rr++)
+        for (let cc = bc; cc < bc + 3; cc++)
+          if (cands[rr][cc].includes(hlVal)) boxPos.push([rr, cc]);
+      if (boxPos.length === 1 && boxPos[0][0] === r && boxPos[0][1] === c) { this.onNumberInput(hlVal); return; }
     }
-    // 同列
-    let colPos = [];
-    for (let rr = 0; rr < 9; rr++) if (cands[rr][c].includes(hlVal)) colPos.push(rr);
-    if (colPos.length === 1 && colPos[0] === r) {
-      this.onNumberInput(hlVal);
-      return;
-    }
-    // 同宫
-    const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
-    let boxPos = [];
-    for (let rr = br; rr < br + 3; rr++)
-      for (let cc = bc; cc < bc + 3; cc++)
-        if (cands[rr][cc].includes(hlVal)) boxPos.push([rr, cc]);
-    if (boxPos.length === 1 && boxPos[0][0] === r && boxPos[0][1] === c) {
-      this.onNumberInput(hlVal);
+
+    // Case 2: 该格只剩一个候选数（唯余数）→ 直接填
+    if (cands[r][c].length === 1) {
+      this.onNumberInput(cands[r][c][0]);
     }
   },
 

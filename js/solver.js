@@ -100,24 +100,24 @@ const Solver = {
       const cells = r.cells.slice(0, 4).map(c => `R${c.row + 1}C${c.col + 1}`).join('、');
       const more = r.cells.length > 4 ? `等 ${r.cells.length} 格` : '';
 
-      if (r.technique.includes('数对') || r.technique.includes('Naked Pair')) {
-        h.technique = '显式数对';
-        h.explanation = `某单元中两格的候选完全相同，可删除该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
-      } else if (r.technique.includes('隐式数对') || r.technique.includes('Hidden Pair')) {
-        h.technique = '隐式数对';
-        h.explanation = `某单元中两个数字只能出现在相同两格，可删除这两格中的其他候选数（涉及 ${cells}${more}）。`;
-      } else if (r.technique.includes('三数组') || r.technique.includes('Naked Triple')) {
-        h.technique = '显式三数组';
-        h.explanation = `某单元中三格的候选并集恰好为三个数字，可删该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
-      } else if (r.technique.includes('隐式三数组') || r.technique.includes('Hidden Triple')) {
-        h.technique = '隐式三数组';
-        h.explanation = `某单元中三个数字只能出现在相同三格，可删这些格子中其他候选（涉及 ${cells}${more}）。`;
-      } else if (r.technique.includes('指向') || r.technique.includes('Pointing')) {
+      if (r.technique.includes('指向') || r.technique.includes('Pointing')) {
         h.technique = '指向数对';
         h.explanation = `某宫中数字 ${vals} 的候选都在同一行/列，可删该行/列外部的 ${vals}（涉及 ${cells}${more}）。`;
       } else if (r.technique.includes('区块') || r.technique.includes('Box/Line')) {
         h.technique = '区块删减';
         h.explanation = `某行/列中数字 ${vals} 的候选都在同一宫，可删该宫内其他行/列的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('隐式数对') || r.technique.includes('Hidden Pair')) {
+        h.technique = '隐式数对';
+        h.explanation = `某单元中两个数字只能出现在相同两格，可删除这两格中的其他候选数（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('隐式三数组') || r.technique.includes('Hidden Triple')) {
+        h.technique = '隐式三数组';
+        h.explanation = `某单元中三个数字只能出现在相同三格，可删这些格子中其他候选（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('三数组') || r.technique.includes('Naked Triple')) {
+        h.technique = '显式三数组';
+        h.explanation = `某单元中三格的候选并集恰好为三个数字，可删该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
+      } else if (r.technique.includes('数对') || r.technique.includes('Naked Pair')) {
+        h.technique = '显式数对';
+        h.explanation = `某单元中两格的候选完全相同，可删除该单元其他格中的 ${vals}（涉及 ${cells}${more}）。`;
       } else if (r.technique.includes('X翼') || r.technique.includes('X-Wing')) {
         h.technique = 'X翼';
         h.explanation = `数字 ${vals} 在两行（列）中形成矩形锁定，可删对应列（行）中其他格的 ${vals}（涉及 ${cells}${more}）。`;

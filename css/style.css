@@ -271,6 +271,12 @@ button:active { transform: scale(0.96); }
   font-weight: 500;
   line-height: 1;
 }
+.cell .notes span.hl-note {
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--accent-bg);
+  border-radius: 2px;
+}
 
 /* Number Pad */
 .number-pad {

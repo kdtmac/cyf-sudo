@@ -196,7 +196,43 @@ class Board {
         }
       }
     }
-  }
+    this._updateNoteHighlights();
+  },
+
+  /**
+   * 高亮所有笔记（小字）中与当前选中数字相同的候选数
+   */
+  _updateNoteHighlights() {
+    // 先清除所有已有的笔记高亮
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const cell = this.cells[r][c];
+        const spans = cell.querySelectorAll('.notes span.hl-note');
+        spans.forEach(s => s.classList.remove('hl-note'));
+      }
+    }
+
+    if (!this.highlightSameNum) return;
+    const selVal = (this.selectedRow !== null && this.selectedCol !== null && this.values[this.selectedRow][this.selectedCol] !== 0)
+      ? this.values[this.selectedRow][this.selectedCol] : null;
+    if (selVal === null) return;
+
+    // 给所有笔记中与 selVal 相同的数字加高亮
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (this.values[r][c] !== 0) continue; // 只处理有笔记的格子
+        const cell = this.cells[r][c];
+        const notesGrid = cell.querySelector('.notes');
+        if (!notesGrid) continue;
+        const spans = notesGrid.querySelectorAll('span');
+        spans.forEach(span => {
+          if (span.textContent === String(selVal)) {
+            span.classList.add('hl-note');
+          }
+        });
+      }
+    }
+  },
 
   highlightErrors(errors) {
     for (const { row, col } of errors) {

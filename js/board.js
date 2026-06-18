@@ -73,9 +73,12 @@ class Board {
   }
 
   _handleClick(r, c) {
-    // 记住切换前的选中值，供双击使用
-    this._lastHighlightedVal = (this.selectedRow !== null && this.selectedCol !== null && this.values[this.selectedRow][this.selectedCol] !== 0)
-      ? this.values[this.selectedRow][this.selectedCol] : null;
+    // 只在切换格子时记住切换前的选中值（双击的第二下 click 不会覆盖）
+    const isSameCell = this.selectedRow === r && this.selectedCol === c;
+    if (!isSameCell) {
+      this._lastHighlightedVal = (this.selectedRow !== null && this.selectedCol !== null && this.values[this.selectedRow][this.selectedCol] !== 0)
+        ? this.values[this.selectedRow][this.selectedCol] : null;
+    }
     this.selectCell(r, c);
     if (this._onCellClick) this._onCellClick(r, c);
   }

@@ -17,8 +17,8 @@ const Generator = {
     hard:   { remove: 51, minClues: 26, label: '困难', emoji: '🔥', xieRating: '★3-5', seScore: '3.0-4.6', desc: '三数组、X-Wing', minLevel: 2, maxLevel: 5, maxAttempts: 6 },
     expert: { remove: 55, minClues: 22, label: '专家', emoji: '💀', xieRating: '★5-7', seScore: '4.0-6.0', desc: 'SWORDFISH、XY-Wing', minLevel: 2, maxLevel: 7, maxAttempts: 8 },
     master: { remove: 58, minClues: 19, label: '大师', emoji: '👑', xieRating: '★7-8', seScore: '5.5-7.5', desc: '空矩形、W-Wing、唯一矩形', minLevel: 3, maxLevel: 8, maxAttempts: 8 },
-    extreme:{ remove: 61, minClues: 17, label: '极限', emoji: '💎', xieRating: '★8-9', seScore: '7.0-9.0', desc: '强制链、AIC、Sue De Coq', minLevel: 4, maxLevel: 8, maxAttempts: 10 },
-    insane: { remove: 64, minClues: 15, label: '地狱', emoji: '☠️', xieRating: '★9-10+', seScore: '8.5-10.0+', desc: '动态强制链、复合技巧', minLevel: 4, maxLevel: 8, maxAttempts: 12 },
+    extreme:{ remove: 61, minClues: 17, label: '极限', emoji: '💎', xieRating: '★8-9', seScore: '7.0-9.0', desc: '强制链、AIC、Sue De Coq', minLevel: 4, maxLevel: 8, maxAttempts: 12 },
+    insane: { remove: 64, minClues: 15, label: '地狱', emoji: '☠️', xieRating: '★9-10+', seScore: '8.5-10.0+', desc: '动态强制链、复合技巧', minLevel: 5, maxLevel: 8, maxAttempts: 20 },
   },
 
   /**
@@ -42,16 +42,10 @@ const Generator = {
       let puzzle = this._createPuzzle(solution, difficulty);
 
       if (needCheck) {
-        let analysis = Solver.analyzeDifficulty(puzzle);
-
-        // 局部搜索：如果 puzzle 不够难，试试交换格子提升难度
-        if (analysis.level < cfg.minLevel && cfg.minLevel >= 4) {
-          const boosted = this._boostDifficulty(solution, puzzle, cfg);
-          if (boosted) {
-            puzzle = boosted.puzzle;
-            analysis = boosted.analysis;
-          }
-        }
+        // 极限挖空：把能去的格子全部去掉，只留关键格
+        const boosted = this._boostDifficulty(solution, puzzle, cfg);
+        const analysis = boosted.analysis;
+        puzzle = boosted.puzzle;
 
         if (analysis.level >= cfg.minLevel) {
           return { puzzle, solution, difficulty, analysis };
@@ -242,42 +236,50 @@ const Generator = {
   },
 
   /**
-   * 局部搜索优化：对不够难的 puzzle，尝试进一步移除格子来提升难度。
-   * 遍历 puzzle 中所有已填格，每移除一格检查唯一性+难度。
-   * @returns {{puzzle, analysis}|null}
+   * 多轮极限挖空：尝试移除更多格子，只保留让难度不降的移除。
+   * 多轮迭代直到无进展或达到最小线索数。
+   * @returns {{puzzle, analysis}}
    */
   _boostDifficulty(solution, puzzle, cfg) {
-    let bestPuzzle = puzzle.map(row => [...row]);
-    let bestAnalysis = Solver.analyzeDifficulty(bestPuzzle);
-    let bestLevel = bestAnalysis.level;
+    let working = puzzle.map(row => [...row]);
+    let curAnalysis = Solver.analyzeDifficulty(working);
+    let curLevel = curAnalysis.level;
+    let changed = true;
+    let pass = 0;
 
-    // 收集 puzzle 中已填充的非空单元格
-    const filledCells = [];
-    for (let r = 0; r < 9; r++)
-      for (let c = 0; c < 9; c++)
-        if (bestPuzzle[r][c] !== 0) filledCells.push([r, c]);
-    this._shuffle(filledCells);
+    while (changed && pass < 6) {
+      changed = false;
+      pass++;
 
-    let improved = false;
-    for (const [r, c] of filledCells) {
-      if (bestLevel >= cfg.minLevel) break;
-      if (81 - this._countClues(bestPuzzle) >= cfg.remove + 4) break; // 不再过度移除
+      const filled = [];
+      for (let r = 0; r < 9; r++)
+        for (let c = 0; c < 9; c++)
+          if (working[r][c] !== 0) filled.push([r, c]);
+      this._shuffle(filled);
 
-      const backup = bestPuzzle[r][c];
-      bestPuzzle[r][c] = 0;
-      if (this._countSolutions(bestPuzzle) !== 1) {
-        bestPuzzle[r][c] = backup;
-        continue;
-      }
-      const a = Solver.analyzeDifficulty(bestPuzzle);
-      if (a.level >= bestLevel) {
-        // 同水平或更好的保留；更新 best 指标
-        if (a.level > bestLevel) { bestLevel = a.level; bestAnalysis = a; improved = true; }
-      } else {
-        bestPuzzle[r][c] = backup; // 回退
+      for (const [r, c] of filled) {
+        if (this._countClues(working) <= cfg.minClues) break;
+
+        const backup = working[r][c];
+        working[r][c] = 0;
+        if (this._countSolutions(working) !== 1) {
+          working[r][c] = backup;
+          continue;
+        }
+        const a = Solver.analyzeDifficulty(working);
+        if (a.level >= curLevel) {
+          // 难度不降，保留移除
+          curLevel = a.level;
+          curAnalysis = a;
+          changed = true;
+        } else {
+          // 难度降低了，回退
+          working[r][c] = backup;
+        }
       }
     }
-    return improved ? { puzzle: bestPuzzle, analysis: bestAnalysis } : null;
+
+    return { puzzle: working, analysis: curAnalysis };
   },
 
   _countClues(puzzle) {

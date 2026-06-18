@@ -19,6 +19,7 @@ const App = {
     this.board = new Board('sudoku-board', {
       onCellClick: (r, c) => this._onCellSelect(r, c),
       onNoteClick: (r, c, num) => this._onNoteClick(r, c, num),
+      onCellDoubleClick: (r, c) => this._onCellDoubleClick(r, c),
     });
 
     UI.init(this);
@@ -186,6 +187,55 @@ const App = {
     this.board.notes[r][c].delete(num);
     this.board._paintCell(r, c);
     this._saveGame();
+  },
+
+  /**
+   * 双击空格：若当前有高亮的数字，且该数字在此格所在行/列/宫中
+   * 只此一格有候选（隐式唯一），则直接填入。
+   */
+  _onCellDoubleClick(r, c) {
+    if (this.gameCompleted) return;
+    if (this.board.given[r][c]) return;
+    if (this.board.getValue(r, c) !== 0) return;
+
+    // 获取当前高亮的数字
+    const sr = this.board.selectedRow;
+    const sc = this.board.selectedCol;
+    if (sr === null || sc === null) return;
+    const selVal = this.board.getValue(sr, sc);
+    if (selVal === 0) return;
+
+    // 检查 selVal 是否在 (r,c) 的候选里
+    const notes = this.board.notes[r][c];
+    if (!notes.has(selVal)) return;
+
+    // 检查是否在某单元中是隐式唯一
+    const grid = this.board.getCurrentGrid();
+    const cands = Solver.getCandidates(grid);
+
+    // 同行
+    let rowPos = [];
+    for (let cc = 0; cc < 9; cc++) if (cands[r][cc].includes(selVal)) rowPos.push(cc);
+    if (rowPos.length === 1 && rowPos[0] === c) {
+      this.onNumberInput(selVal);
+      return;
+    }
+    // 同列
+    let colPos = [];
+    for (let rr = 0; rr < 9; rr++) if (cands[rr][c].includes(selVal)) colPos.push(rr);
+    if (colPos.length === 1 && colPos[0] === r) {
+      this.onNumberInput(selVal);
+      return;
+    }
+    // 同宫
+    const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+    let boxPos = [];
+    for (let rr = br; rr < br + 3; rr++)
+      for (let cc = bc; cc < bc + 3; cc++)
+        if (cands[rr][cc].includes(selVal)) boxPos.push([rr, cc]);
+    if (boxPos.length === 1 && boxPos[0][0] === r && boxPos[0][1] === c) {
+      this.onNumberInput(selVal);
+    }
   },
 
   /* ========== Tools ========== */

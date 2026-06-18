@@ -21,6 +21,7 @@ class Board {
     this._onCellClick = options.onCellClick || null;
     this._onCellChange = options.onCellChange || null;
     this._onNoteClick = options.onNoteClick || null;
+    this._onCellDoubleClick = options.onCellDoubleClick || null;
 
     this._render();
     this._bindKeyboard();
@@ -39,6 +40,7 @@ class Board {
         if (r === 2 || r === 5) cell.classList.add('box-bottom');
 
         cell.addEventListener('click', () => this._handleClick(r, c));
+        cell.addEventListener('dblclick', () => this._handleDoubleClick(r, c));
 
         this.container.appendChild(cell);
         this.cells[r][c] = cell;
@@ -73,6 +75,10 @@ class Board {
   _handleClick(r, c) {
     this.selectCell(r, c);
     if (this._onCellClick) this._onCellClick(r, c);
+  }
+
+  _handleDoubleClick(r, c) {
+    if (this._onCellDoubleClick) this._onCellDoubleClick(r, c);
   }
 
   selectCell(r, c) {

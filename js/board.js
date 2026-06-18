@@ -197,7 +197,7 @@ class Board {
       }
     }
     this._updateNoteHighlights();
-  },
+  }
 
   /**
    * 高亮所有笔记（小字）中与当前选中数字相同的候选数
@@ -232,7 +232,7 @@ class Board {
         });
       }
     }
-  },
+  }
 
   highlightErrors(errors) {
     for (const { row, col } of errors) {

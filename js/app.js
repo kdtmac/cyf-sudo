@@ -302,6 +302,50 @@ const App = {
     this._saveGame();
   },
 
+  /**
+   * 傻瓜完成：循环扫描——有且仅有一个候选的格子就填，直到没有为止。
+   * 适合解题收尾阶段，省心省力。
+   * @returns {number} 填充的格子数
+   */
+  lazyComplete() {
+    if (this.gameCompleted) return 0;
+    if (!this.gameStarted) { this.gameStarted = true; UI.startTimer(); }
+    let filled = 0;
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+      const grid = this.board.getCurrentGrid();
+      const cands = Solver.getCandidates(grid);
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (grid[r][c] !== 0 || this.board.given[r][c]) continue;
+          if (cands[r][c].length === 1) {
+            const val = cands[r][c][0];
+            this.board.setValue(r, c, val, false);
+            this.board.clearNotes(r, c);
+            grid[r][c] = val; // 同步本地 grid
+            filled++;
+            changed = true;
+          }
+        }
+      }
+    }
+
+    if (filled > 0) {
+      if (this.board.showAutoCandidates) {
+        this.board.setAutoCandidates(this.board.getCurrentGrid());
+      }
+      this._updateNumPad();
+      this._checkVictory();
+      this._saveGame(true);
+      UI.updateCellsLeft(this._countEmpty());
+    }
+
+    return filled;
+  },
+
   /* ========== Victory / Game Over ========== */
   _checkVictory() {
     const grid = this.board.getCurrentGrid();

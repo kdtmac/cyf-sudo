@@ -217,6 +217,10 @@ const UI = {
     document.getElementById('btn-redo').addEventListener('click', () => app.redo());
     document.getElementById('btn-check').addEventListener('click', () => app.checkErrors());
     document.getElementById('btn-hint').addEventListener('click', () => app.getHint());
+    document.getElementById('btn-lazy').addEventListener('click', () => {
+      const filled = app.lazyComplete();
+      if (filled === 0) alert('未找到只有唯一候选数的空格。');
+    });
     document.getElementById('btn-apply-hint').addEventListener('click', () => app.applyHint());
 
     const pencilBtn = document.getElementById('btn-pencil');

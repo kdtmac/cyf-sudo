@@ -333,6 +333,8 @@ button:active { transform: scale(0.96); }
 .tool-btn.primary:hover { background: var(--accent-light); }
 .tool-btn.hint-btn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 .tool-btn.hint-btn:hover { background: #fde68a; }
+.tool-btn.lazy-btn { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.tool-btn.lazy-btn:hover { background: #a7f3d0; }
 
 .toggle-btn[data-active="true"] { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-light); }
 

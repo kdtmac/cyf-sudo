@@ -359,6 +359,7 @@ const App = {
       gameStarted: this.gameStarted,
       timerSeconds: this.gameStarted ? UI.getTime() : 0,
       pencilMode: this.pencilMode,
+      showAutoCandidates: this.board.showAutoCandidates,
     };
     Storage.saveGame(state);
   },
@@ -373,6 +374,7 @@ const App = {
     this.redoStack = state.redoStack || [];
     this.gameStarted = state.gameStarted;
     this.pencilMode = state.pencilMode || false;
+    this.board.showAutoCandidates = state.showAutoCandidates || false;
 
     this.board.loadPuzzle(state.values, state.given);
 
@@ -393,6 +395,7 @@ const App = {
     UI.updateHintsUsed(this.hintsUsed);
     UI.updateCellsLeft(this._countEmpty());
     document.getElementById('btn-pencil').dataset.active = this.pencilMode ? 'true' : 'false';
+    document.getElementById('btn-autocand').dataset.active = this.board.showAutoCandidates ? 'true' : 'false';
 
     const diffBtns = document.querySelectorAll('.diff-btn');
     diffBtns.forEach(b => {
